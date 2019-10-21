@@ -10,6 +10,7 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+
   broker:
     image: confluentinc/cp-enterprise-kafka:5.3.1
     hostname: broker
@@ -32,6 +33,7 @@ services:
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'true'
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+
   schema-registry:
     image: confluentinc/cp-schema-registry:5.3.1
     hostname: schema-registry
@@ -44,8 +46,12 @@ services:
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
+
   connect:
     image: confluentinc/kafka-connect-datagen:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     hostname: connect
     container_name: connect
     depends_on:
@@ -79,6 +85,7 @@ services:
       CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
     command: "bash -c 'if [ ! -d /usr/share/confluent-hub-components/confluentinc-kafka-connect-complex-example-datagen ]; then echo \"WARNING: Did not find directory for kafka-connect-complex-example-datagen (did you remember to run: docker-compose up -d --build ?)\"; fi ; /etc/confluent/docker/run'"
+
   control-center:
     image: confluentinc/cp-enterprise-control-center:5.3.1
     hostname: control-center
@@ -103,6 +110,7 @@ services:
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
+
   ksql-server:
     image: confluentinc/cp-ksql-server:5.3.1
     hostname: ksql-server
@@ -123,6 +131,7 @@ services:
       KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
       KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
       KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+
   ksql-cli:
     image: confluentinc/cp-ksql-cli:5.3.1
     container_name: ksql-cli
@@ -132,6 +141,7 @@ services:
       - ksql-server
     entrypoint: /bin/sh
     tty: true
+
   ksql-datagen:
     # Downrev ksql-examples to 5.1.2 due to DEVX-798 (work around issues in 5.2.0)
     image: confluentinc/ksql-examples:5.3.1
@@ -155,6 +165,7 @@ services:
       STREAMS_BOOTSTRAP_SERVERS: broker:29092
       STREAMS_SCHEMA_REGISTRY_HOST: schema-registry
       STREAMS_SCHEMA_REGISTRY_PORT: 8081
+
   rest-proxy:
     image: confluentinc/cp-kafka-rest:5.3.1
     depends_on:
